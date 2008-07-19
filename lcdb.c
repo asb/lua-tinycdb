@@ -10,31 +10,27 @@
 #define LCDB_DB "cdb.db"
 #define LCDB_MAKE "cdb.make"
 
-static struct cdb *push_cdb(lua_State *L)
-{
+static struct cdb *push_cdb(lua_State *L) {
   struct cdb *cdbp = (struct cdb*)lua_newuserdata(L, sizeof(struct cdb));
   luaL_getmetatable(L, LCDB_DB);
   lua_setmetatable(L, -2);
   return cdbp;
 }
 
-static struct cdb *check_cdb(lua_State *L, int n)
-{
+static struct cdb *check_cdb(lua_State *L, int n) {
   struct cdb *cdbp = (struct cdb*)luaL_checkudata(L, n, LCDB_DB);
   if (cdbp->cdb_fd < 0)
     luaL_error(L, "attempted to use a closed cdb");
   return cdbp;
 }
 
-static int push_errno(lua_State *L, int xerrno)
-{
+static int push_errno(lua_State *L, int xerrno) {
   lua_pushnil(L);
   lua_pushstring(L, strerror(xerrno));
   return 2;
 }
 
-static int lcdb_open(lua_State *L)
-{
+static int lcdb_open(lua_State *L) {
   struct cdb *cdbp;
   const char *filename = luaL_checkstring(L, 1);
 
@@ -47,11 +43,9 @@ static int lcdb_open(lua_State *L)
   return 1;
 }
 
-static int lcdbm_gc(lua_State *L)
-{
+static int lcdbm_gc(lua_State *L) {
   struct cdb *cdbp = (struct cdb*)luaL_checkudata(L, 1, LCDB_DB);
-  if (cdbp->cdb_fd >= 0)
-  {
+  if (cdbp->cdb_fd >= 0) {
     int fd = cdbp->cdb_fd;
     cdb_free(cdbp);
     close(fd);
@@ -60,8 +54,7 @@ static int lcdbm_gc(lua_State *L)
   return 0;
 }
 
-static int lcdbm_tostring(lua_State *L)
-{
+static int lcdbm_tostring(lua_State *L) {
   struct cdb *cdbp = (struct cdb*)luaL_checkudata(L, 1, LCDB_DB);
   if (cdbp->cdb_fd >= 0)
     lua_pushfstring(L, "<"LCDB_DB"> (%p)", cdbp);
@@ -70,8 +63,7 @@ static int lcdbm_tostring(lua_State *L)
   return 1;
 }
 
-static int lcdbm_get(lua_State *L)
-{
+static int lcdbm_get(lua_State *L) {
   size_t klen;
   unsigned vlen, vpos;
   int ret;
@@ -79,26 +71,20 @@ static int lcdbm_get(lua_State *L)
   const char *key = luaL_checklstring(L, 2, &klen);
 
   ret = cdb_find(cdbp, key, klen);
-  if (ret > 0)
-  {
+  if (ret > 0) {
     vpos = cdb_datapos(cdbp);
     vlen = cdb_datalen(cdbp);
     lua_pushlstring(L, cdb_get(cdbp, vlen, vpos), vlen);
     return 1;
-  }
-  else if (ret == 0)
-  {
+  } else if (ret == 0) {
     lua_pushnil(L);
     return 1;
-  }
-  else /* ret < 0 */
-  {
+  } else /* ret < 0 */ {
     return push_errno(L, errno);
   }
 }
 
-static int lcdbm_find_all(lua_State *L)
-{
+static int lcdbm_find_all(lua_State *L) {
   size_t klen;
   int ret;
   int n = 1;
@@ -109,8 +95,7 @@ static int lcdbm_find_all(lua_State *L)
   cdb_findinit(&cdbf, cdbp, key, klen);
 
   lua_newtable(L);
-  while((ret = cdb_findnext(&cdbf)))
-  {
+  while((ret = cdb_findnext(&cdbf))) {
     unsigned vpos, vlen;
     if (ret < 0) /* error */
       return push_errno(L, errno);
@@ -124,16 +109,14 @@ static int lcdbm_find_all(lua_State *L)
   return 1;
 }
   
-static int lcdbm_iternext(lua_State *L)
-{
+static int lcdbm_iternext(lua_State *L) {
   struct cdb *cdbp = (struct cdb*)lua_touserdata(L, lua_upvalueindex(1));
   unsigned pos = lua_tointeger(L, lua_upvalueindex(2));
 
   int ret = cdb_seqnext(&pos, cdbp);
   lua_pushinteger(L, pos);
   lua_replace(L, lua_upvalueindex(2));
-  if (ret > 0)
-  {
+  if (ret > 0) {
     int klen = cdb_keylen(cdbp);
     int kpos = cdb_keypos(cdbp);
     lua_pushlstring(L, cdb_get(cdbp, klen, kpos), klen);
@@ -141,20 +124,15 @@ static int lcdbm_iternext(lua_State *L)
     int vpos = cdb_datapos(cdbp);
     lua_pushlstring(L, cdb_get(cdbp, vlen, vpos), vlen);
     return 2;
-  }
-  else if (ret == 0) /* finished */
-  {
+  } else if (ret == 0) { /* finished */
     lua_pushnil(L);
     return 1;
-  }
-  else /* ret < 0, error */
-  {
+  } else /* ret < 0 */ {
     return push_errno(L, errno);
   }
 }
 
-static int lcdbm_iter(lua_State *L)
-{
+static int lcdbm_iter(lua_State *L) {
   struct cdb *cdbp = check_cdb(L, 1);
 
   unsigned pos;
@@ -164,8 +142,7 @@ static int lcdbm_iter(lua_State *L)
   return 1;
 }
 
-static struct cdb_make *push_cdb_make(lua_State *L)
-{
+static struct cdb_make *push_cdb_make(lua_State *L) {
   struct cdb_make *cdbmp = (struct cdb_make*)lua_newuserdata(L, sizeof(struct cdb_make));
   luaL_getmetatable(L, LCDB_MAKE);
   lua_setmetatable(L, -2);
@@ -174,16 +151,14 @@ static struct cdb_make *push_cdb_make(lua_State *L)
   return cdbmp;
 }
 
-static struct cdb_make *check_cdb_make(lua_State *L, int n)
-{
+static struct cdb_make *check_cdb_make(lua_State *L, int n) {
   struct cdb_make *cdbmp = luaL_checkudata(L, n, LCDB_MAKE);
   if (cdb_fileno(cdbmp) < 0)
     luaL_error(L, "attemped to use a closed cdb_make");
   return cdbmp;
 }
 
-static int lcdb_make(lua_State *L)
-{
+static int lcdb_make(lua_State *L) {
   int fd;
   int ret;
   struct cdb_make *cdbmp;
@@ -210,12 +185,10 @@ static int lcdb_make(lua_State *L)
   return 1;
 }
 
-static int lcdbmakem_gc(lua_State *L)
-{
+static int lcdbmakem_gc(lua_State *L) {
   struct cdb_make *cdbmp = luaL_checkudata(L, 1, LCDB_MAKE);
 
-  if (cdbmp->cdb_fd >= 0)
-  {
+  if (cdbmp->cdb_fd >= 0) {
     close(cdbmp->cdb_fd);
     cdbmp->cdb_fd = -1;
     cdb_make_free(cdbmp);
@@ -223,8 +196,7 @@ static int lcdbmakem_gc(lua_State *L)
   return 0;
 }
 
-static int lcdbmakem_tostring(lua_State *L)
-{
+static int lcdbmakem_tostring(lua_State *L) {
   struct cdb_make *cdbmp = luaL_checkudata(L, 1, LCDB_MAKE);
 
   if (cdbmp->cdb_fd >= 0)
@@ -234,8 +206,7 @@ static int lcdbmakem_tostring(lua_State *L)
   return 1;
 }
 
-static int lcdbmakem_add(lua_State *L)
-{
+static int lcdbmakem_add(lua_State *L) {
   static const char *const opts[] = { "add", "replace", "insert", "warn", "replace0", NULL };
   size_t klen, vlen;
   struct cdb_make *cdbmp = check_cdb_make(L, 1);
@@ -250,8 +221,7 @@ static int lcdbmakem_add(lua_State *L)
   return 0;
 }
 
-static int lcdbmakem_finish(lua_State *L)
-{
+static int lcdbmakem_finish(lua_State *L) {
   struct cdb_make *cdbmp = check_cdb_make(L, 1);
   /* retrieve destination, current filename */
   lua_getfenv(L, -1);
@@ -297,8 +267,7 @@ static const struct luaL_Reg lcdbmake_m [] = {
   {NULL, NULL}
 };
 
-int luaopen_cdb(lua_State *L)
-{
+int luaopen_cdb(lua_State *L) {
   luaL_newmetatable(L, LCDB_DB);
   lua_pushvalue(L, -1);
   lua_setfield(L, -2, "__index");

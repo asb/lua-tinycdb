@@ -67,7 +67,7 @@ static int lcdbm_tostring(lua_State *L)
     lua_pushfstring(L, "<"LCDB_DB"> (%p)", cdbp);
   else
     lua_pushfstring(L, "<"LCDB_DB"> (closed)");
-  return 0;
+  return 1;
 }
 
 static int lcdbm_get(lua_State *L)

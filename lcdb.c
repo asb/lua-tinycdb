@@ -30,25 +30,43 @@ static int push_errno(lua_State *L, int xerrno) {
   return 2;
 }
 
+/** @@module cdb */
+
+/**
+ * cdb.open(filename) : Opens the cdb at the given filename.
+ *
+ * @constructor
+ * @return a cdb instance or nil, errmsg in case of error.
+ */
 static int lcdb_open(lua_State *L) {
   struct cdb *cdbp;
   const char *filename = luaL_checkstring(L, 1);
+  int ret;
 
   int fd = open(filename, O_RDONLY);
   if (fd < 0)
     return push_errno(L, errno);
 
   cdbp = push_cdb(L);
-  cdb_init(cdbp, fd);
+  ret = cdb_init(cdbp, fd);
+  if (ret < 0) {
+    lua_pushnil(L);
+    lua_pushfstring(L, LCDB_DB": file %s is not a valid database (or mmap failed)", filename);
+    return 2;
+  }
   return 1;
 }
 
+/**
+ * db:close() : Closes db.
+ * This will occur automatically when the instance is garbage collected, but
+ * that takes an unpredictable amount of time to happen.
+ */
 static int lcdbm_gc(lua_State *L) {
   struct cdb *cdbp = (struct cdb*)luaL_checkudata(L, 1, LCDB_DB);
   if (cdbp->cdb_fd >= 0) {
-    int fd = cdbp->cdb_fd;
+    close(cdbp->cdb_fd);
     cdb_free(cdbp);
-    close(fd);
     cdbp->cdb_fd = -1;
   }
   return 0;
@@ -63,6 +81,12 @@ static int lcdbm_tostring(lua_State *L) {
   return 1;
 }
 
+/**
+ * db:get(key) : Get the first value stored for the given key
+ * Throws an error if tinycdb reports one.
+ * @return the string value stored for the given key, or nil if the key does
+ *         not exist in db.
+ */
 static int lcdbm_get(lua_State *L) {
   size_t klen;
   unsigned vlen, vpos;
@@ -79,11 +103,17 @@ static int lcdbm_get(lua_State *L) {
   } else if (ret == 0) {
     lua_pushnil(L);
     return 1;
-  } else /* ret < 0 */ {
-    return push_errno(L, errno);
+  } else {
+    return luaL_error(L, LCDB_DB": error in find. Database corrupt?");
   }
 }
 
+/**
+ * db:find_all(key) : Get all values stored for the given key
+ * Throws an error if the cdb library reports an error.
+ * @return a table containing the values found (which is empty if no such key
+ *         exists).
+ */
 static int lcdbm_find_all(lua_State *L) {
   size_t klen;
   int ret;
@@ -97,8 +127,9 @@ static int lcdbm_find_all(lua_State *L) {
   lua_newtable(L);
   while((ret = cdb_findnext(&cdbf))) {
     unsigned vpos, vlen;
-    if (ret < 0) /* error */
-      return push_errno(L, errno);
+    if (ret < 0) { /* error */
+      return luaL_error(L, LCDB_DB": error in find_all. Database corrupt?");
+    }
 
     vpos = cdb_datapos(cdbp);
     vlen = cdb_datalen(cdbp);
@@ -127,11 +158,17 @@ static int lcdbm_iternext(lua_State *L) {
   } else if (ret == 0) { /* finished */
     lua_pushnil(L);
     return 1;
-  } else /* ret < 0 */ {
-    return push_errno(L, errno);
+  } else { /* error */
+    return luaL_error(L, LCDB_DB": error in iterator. Database corrupt?");
   }
 }
 
+/**
+ * db:iter() : an iterator analogous to pairs(t) on a Lua table
+ * For each step of the iteration, the iterator function returns key, value.
+ * Throws an error if the cdb library reports an error.
+ * @return an iterator function
+ */
 static int lcdbm_iter(lua_State *L) {
   struct cdb *cdbp = check_cdb(L, 1);
 
@@ -153,11 +190,22 @@ static struct cdb_make *push_cdb_make(lua_State *L) {
 
 static struct cdb_make *check_cdb_make(lua_State *L, int n) {
   struct cdb_make *cdbmp = luaL_checkudata(L, n, LCDB_MAKE);
-  if (cdb_fileno(cdbmp) < 0)
-    luaL_error(L, "attemped to use a closed cdb_make");
+  if (cdbmp->cdb_fd < 0)
+    luaL_error(L, "attempted to use a closed cdb_make");
   return cdbmp;
 }
 
+/** cdb.make(destination, temporary) : Create a cdb maker
+ * Upon calling maker:finish(), the temporary file will be renamed to the 
+ * destination, replacing it atomically. This function fails if the temporary 
+ * file already exists. If you allow maker to be garbage collected without 
+ * calling finish(), the temporary file will be left behind.
+ *
+ * @constructor
+ * @param destination the destination filename.
+ * @param the name of the file to be used while the cdb is being constructed
+ * @return an instance of cdb.make or nil plus an error message.
+ */
 static int lcdb_make(lua_State *L) {
   int fd;
   int ret;
@@ -190,8 +238,8 @@ static int lcdbmakem_gc(lua_State *L) {
 
   if (cdbmp->cdb_fd >= 0) {
     close(cdbmp->cdb_fd);
-    cdbmp->cdb_fd = -1;
     cdb_make_free(cdbmp);
+    cdbmp->cdb_fd = -1;
   }
   return 0;
 }
@@ -206,8 +254,25 @@ static int lcdbmakem_tostring(lua_State *L) {
   return 1;
 }
 
+/**
+ * maker:add(key, value [, mode]) : adds the key value pair
+ * Throws an error if one is reported by tinycdb, in which case it is not 
+ * possible to continue the database construction process.
+ * @param mode controls the behaviour when adding a key that already exists. 
+ *             Can be one of:
+ *             "add":     the default, no duplicate checking will be performed
+ *             "replace": if the key already exists, all instances will be 
+ *                        removed from the database before adding the new key, 
+ *                        value pair. Can be slow if the file is large.
+ *             "replace0": if the key already exists, the old value will be 
+ *                         zeroed out before adding the new key, value pair. 
+ *                         Faster than "replace", but the zeroed record will 
+ *                         appear when iterating the database.
+ *             "insert":   adds the key, value pair only if the key does not 
+ *                         exist in the database.
+ */
 static int lcdbmakem_add(lua_State *L) {
-  static const char *const opts[] = { "add", "replace", "insert", "warn", "replace0", NULL };
+  static const char *const opts[] = { "add", "replace", "replace0", "insert", NULL };
   size_t klen, vlen;
   struct cdb_make *cdbmp = check_cdb_make(L, 1);
   const char *key = luaL_checklstring(L, 2, &klen);
@@ -217,10 +282,14 @@ static int lcdbmakem_add(lua_State *L) {
 
   int ret = cdb_make_put(cdbmp, key, klen, value, vlen, mode);
   if (ret < 0)
-    return push_errno(L, errno);
+    return luaL_error(L, strerror(errno));
   return 0;
 }
 
+/**
+ * maker:finish() : renames temporary file to destination
+ * Throws an error if this fails, as currently it is not possible to rety.
+ */
 static int lcdbmakem_finish(lua_State *L) {
   struct cdb_make *cdbmp = check_cdb_make(L, 1);
   /* retrieve destination, current filename */
@@ -232,10 +301,10 @@ static int lcdbmakem_finish(lua_State *L) {
   lua_pop(L, 3);
 
   if (cdb_make_finish(cdbmp) < 0 || fsync(cdb_fileno(cdbmp)) < 0 || 
-      close(cdb_fileno(cdbmp)) < 0 || rename(tmpname, dest) < 0)
-  {
-    cdbmp->cdb_fd = -1; // fatal errors, already freed cdbmp
-    return push_errno(L, errno);
+      close(cdb_fileno(cdbmp)) < 0 || rename(tmpname, dest) < 0) {
+    cdb_make_free(cdbmp); /* in case cdb_make_finish failed before freeing */
+    cdbmp->cdb_fd = -1;
+    return luaL_error(L, strerror(errno));
   }
 
   cdbmp->cdb_fd = -1;

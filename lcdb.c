@@ -89,16 +89,13 @@ static int lcdbm_tostring(lua_State *L) {
  */
 static int lcdbm_get(lua_State *L) {
   size_t klen;
-  unsigned vlen, vpos;
   int ret;
   struct cdb *cdbp = check_cdb(L, 1);
   const char *key = luaL_checklstring(L, 2, &klen);
 
   ret = cdb_find(cdbp, key, klen);
   if (ret > 0) {
-    vpos = cdb_datapos(cdbp);
-    vlen = cdb_datalen(cdbp);
-    lua_pushlstring(L, cdb_get(cdbp, vlen, vpos), vlen);
+    lua_pushlstring(L, cdb_getdata(cdbp), cdb_datalen(cdbp));
     return 1;
   } else if (ret == 0) {
     lua_pushnil(L);
@@ -126,14 +123,11 @@ static int lcdbm_find_all(lua_State *L) {
 
   lua_newtable(L);
   while((ret = cdb_findnext(&cdbf))) {
-    unsigned vpos, vlen;
     if (ret < 0) { /* error */
       return luaL_error(L, LCDB_DB": error in find_all. Database corrupt?");
     }
 
-    vpos = cdb_datapos(cdbp);
-    vlen = cdb_datalen(cdbp);
-    lua_pushlstring(L, cdb_get(cdbp, vlen, vpos), vlen);
+    lua_pushlstring(L, cdb_getdata(cdbp), cdb_datalen(cdbp));
     lua_rawseti(L, -2, n);
     n++;
   }
@@ -148,12 +142,8 @@ static int lcdbm_iternext(lua_State *L) {
   lua_pushinteger(L, pos);
   lua_replace(L, lua_upvalueindex(2));
   if (ret > 0) {
-    int klen = cdb_keylen(cdbp);
-    int kpos = cdb_keypos(cdbp);
-    lua_pushlstring(L, cdb_get(cdbp, klen, kpos), klen);
-    int vlen = cdb_datalen(cdbp);
-    int vpos = cdb_datapos(cdbp);
-    lua_pushlstring(L, cdb_get(cdbp, vlen, vpos), vlen);
+    lua_pushlstring(L, cdb_getkey(cdbp), cdb_keylen(cdbp));
+    lua_pushlstring(L, cdb_getdata(cdbp), cdb_datalen(cdbp));
     return 2;
   } else if (ret == 0) { /* finished */
     lua_pushnil(L);

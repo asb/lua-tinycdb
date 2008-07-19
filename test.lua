@@ -7,7 +7,7 @@ local db = assert(cdb.make(db_name, db_name..".tmp"))
 db:add("one", "1")
 db:add("two", "2")
 db:add("three", "4") -- oops
-db:add("three", "3", "replace0")
+db:add("three", "3", "replace")
 db:add("three", "III")
 assert(db:finish())
 

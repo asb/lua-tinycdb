@@ -99,7 +99,7 @@ static int lcdbm_get(lua_State *L)
 
 static int lcdbm_find_all(lua_State *L)
 {
-  unsigned klen;
+  size_t klen;
   int ret;
   int n = 1;
   struct cdb *cdbp = check_cdb(L, 1);
@@ -237,7 +237,7 @@ static int lcdbmakem_tostring(lua_State *L)
 static int lcdbmakem_add(lua_State *L)
 {
   static const char *const opts[] = { "add", "replace", "insert", "warn", "replace0", NULL };
-  unsigned klen, vlen;
+  size_t klen, vlen;
   struct cdb_make *cdbmp = check_cdb_make(L, 1);
   const char *key = luaL_checklstring(L, 2, &klen);
   const char *value = luaL_checklstring(L, 3, &vlen);

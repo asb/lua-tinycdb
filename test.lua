@@ -23,11 +23,11 @@ do
     assert_nil(db:get("four"))
   end
 
-  function test_iter()
+  function test_pairs()
     local expected_keys = { "one", "two", "three", "three" }
     local expected_values = { "1", "2", "3", "III" }
     local i = 1
-    for k, v in db:iter() do
+    for k, v in db:pairs() do
       assert_equal(expected_keys[i], k)
       assert_equal(expected_values[i], v)
       i = i+1

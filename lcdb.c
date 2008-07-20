@@ -154,12 +154,12 @@ static int lcdbm_iternext(lua_State *L) {
 }
 
 /**
- * db:iter() : an iterator analogous to pairs(t) on a Lua table
+ * db:pairs() : an iterator analogous to pairs(t) on a Lua table
  * For each step of the iteration, the iterator function returns key, value.
  * Throws an error if the cdb library reports an error.
  * @return an iterator function
  */
-static int lcdbm_iter(lua_State *L) {
+static int lcdbm_pairs(lua_State *L) {
   struct cdb *cdbp = check_cdb(L, 1);
 
   unsigned pos;
@@ -314,7 +314,7 @@ static const struct luaL_Reg lcdb_m [] = {
   {"__tostring", lcdbm_tostring},
   {"find_all", lcdbm_find_all},
   {"get", lcdbm_get},
-  {"iter", lcdbm_iter},
+  {"pairs", lcdbm_pairs},
   {NULL, NULL}
 };
 

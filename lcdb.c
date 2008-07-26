@@ -33,7 +33,8 @@ static int push_errno(lua_State *L, int xerrno) {
 /** @@module cdb */
 
 /**
- * cdb.open(filename) : Opens the cdb at the given filename.
+ * cdb.open(filename)
+ * Opens the cdb at the given filename.
  *
  * @constructor
  * @return a cdb instance or nil, errmsg in case of error.
@@ -58,9 +59,9 @@ static int lcdb_open(lua_State *L) {
 }
 
 /**
- * db:close() : Closes db.
- * This will occur automatically when the instance is garbage collected, but
- * that takes an unpredictable amount of time to happen.
+ * db:close()
+ * Closes db. This will occur automatically when the instance is garbage 
+ * collected, but that takes an unpredictable amount of time to happen.
  */
 static int lcdbm_gc(lua_State *L) {
   struct cdb *cdbp = (struct cdb*)luaL_checkudata(L, 1, LCDB_DB);
@@ -82,8 +83,10 @@ static int lcdbm_tostring(lua_State *L) {
 }
 
 /**
- * db:get(key) : Get the first value stored for the given key
- * Throws an error if tinycdb reports one.
+ * db:get(key)
+ * Get the first value stored for the given key. Throws an error if tinycdb 
+ * reports one.
+ *
  * @return the string value stored for the given key, or nil if the key does
  *         not exist in db.
  */
@@ -106,8 +109,10 @@ static int lcdbm_get(lua_State *L) {
 }
 
 /**
- * db:find_all(key) : Get all values stored for the given key
- * Throws an error if the cdb library reports an error.
+ * db:find_all(key)
+ * Get all values stored for the given key. Throws an error if the cdb library 
+ * reports an error.
+ *
  * @return a table containing the values found (which is empty if no such key
  *         exists).
  */
@@ -154,9 +159,11 @@ static int lcdbm_iternext(lua_State *L) {
 }
 
 /**
- * db:pairs() : an iterator analogous to pairs(t) on a Lua table
- * For each step of the iteration, the iterator function returns key, value.
- * Throws an error if the cdb library reports an error.
+ * db:pairs()
+ * An iterator analogous to pairs(t) on a Lua table. For each step of the 
+ * iteration, the iterator function returns key, value. Throws an error if the 
+ * cdb library reports an error.
+ *
  * @return an iterator function
  */
 static int lcdbm_pairs(lua_State *L) {
@@ -185,11 +192,12 @@ static struct cdb_make *check_cdb_make(lua_State *L, int n) {
   return cdbmp;
 }
 
-/** cdb.make(destination, temporary) : Create a cdb maker
- * Upon calling maker:finish(), the temporary file will be renamed to the 
- * destination, replacing it atomically. This function fails if the temporary 
- * file already exists. If you allow maker to be garbage collected without 
- * calling finish(), the temporary file will be left behind.
+/** 
+ * cdb.make(destination, temporary)
+ * Create a cdb maker. Upon calling maker:finish(), the temporary file will be 
+ * renamed to the destination, replacing it atomically. This function fails if 
+ * the temporary file already exists. If you allow maker to be garbage 
+ * collected without calling finish(), the temporary file will be left behind.
  *
  * @constructor
  * @param destination the destination filename.
@@ -245,9 +253,11 @@ static int lcdbmakem_tostring(lua_State *L) {
 }
 
 /**
- * maker:add(key, value [, mode]) : adds the key value pair
- * Throws an error if one is reported by tinycdb, in which case it is not 
- * possible to continue the database construction process.
+ * maker:add(key, value [, mode])
+ * Adds the key value pair. Throws an error if one is reported by tinycdb, in 
+ * which case it is not possible to continue the database construction 
+ * process.
+ *
  * @param mode controls the behaviour when adding a key that already exists. 
  *             Can be one of:
  *             "add":     the default, no duplicate checking will be performed
@@ -277,8 +287,8 @@ static int lcdbmakem_add(lua_State *L) {
 }
 
 /**
- * maker:finish() : renames temporary file to destination
- * Throws an error if this fails, as currently it is not possible to rety.
+ * maker:finish()
+ * Renames temporary file to destination Throws an error if this fails.
  */
 static int lcdbmakem_finish(lua_State *L) {
   struct cdb_make *cdbmp = check_cdb_make(L, 1);

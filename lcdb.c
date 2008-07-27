@@ -30,7 +30,10 @@ static int push_errno(lua_State *L, int xerrno) {
   return 2;
 }
 
-/** @@module cdb */
+/** 
+ * cdb 
+ * @type module
+ */
 
 /**
  * cdb.open(filename)
@@ -201,7 +204,7 @@ static struct cdb_make *check_cdb_make(lua_State *L, int n) {
  *
  * @constructor
  * @param destination the destination filename.
- * @param the name of the file to be used while the cdb is being constructed
+ * @param temporary the name of the file to be used while the cdb is being constructed
  * @return an instance of cdb.make or nil plus an error message.
  */
 static int lcdb_make(lua_State *L) {

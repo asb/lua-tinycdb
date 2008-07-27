@@ -1,0 +1,66 @@
+# `cdb`
+
+## `cdb.open(filename)`
+Opens the cdb at the given `filename`.
+Returns a cdb instance or `nil` plus and error message.
+
+## `db:close()`
+Closes `db`. This will occur automatically when the instance is garbage
+collected but that takes an unpredictable amount of time to happen.
+
+## `db:get(key)`
+Get the first value stored for the given string `key`. Throws an error if
+tinycdb reports one.
+
+Returns the string value stored for the given key, or `nil` if the key does not
+exist in `db`.
+
+## `db:find_all(key)`
+Get all values stored for the given string `key`. Throws an error if the
+tinycdb library reports an error.
+
+Returns a table containing the values found (which is empty if no such key exists).
+
+## `db:pairs()`
+An iterator analogous to `pairs(t)` on a Lua table. For each step of the
+iteration, the iterator function returns key, value. Throws an error if the
+tinycdb library reports an error.
+
+Returns an iterator function.
+
+## `cdb.make(destination, temporary)`
+Create a cdb maker. Upon calling `maker:finish(),` the temporary file will be
+renamed to the destination, replacing it atomically. This function fails if the
+temporary file already exists. If you allow maker to be garbage collected
+without calling finish(), the temporary file will be left behind.
+
+Takes the parameters:
+
+* `destination` the destination filename.
+* `temporary` the name of the file to be used while the cdb is being constructed
+
+Returns an instance of `cdb.make` or `nil` plus an error message.
+
+## `maker:add(key, value [, mode])`
+Adds the the pair `key`, `value` which must both be strings. Throws an error 
+if one is reported by tinycdb, in which case it is not possible to continue 
+the database construction process.
+
+`mode` is an optional parameter controlling the behaviour when adding a key
+that already exists. It can be `nil` or any of the strings:
+
+=`"add"`=
+    the default, no duplicate checking will be performed
+=`"replace"`=
+    if the key already exists, all instances will be removed from the database 
+    before adding the new key, value pair. Can be slow if the file is large.
+=`"replace0"`=
+    if the key already exists, the old value will be zeroed out before adding 
+    the new key, value pair.  Faster than "replace", but the zeroed record 
+    will appear when iterating the database.
+=`"insert"`=
+    adds the key, value pair only if the key does not exist in the database.
+
+## `maker:finish()`
+Renames temporary file to the destination filename specified in `cdb.make`. 
+Throws an error if this fails.

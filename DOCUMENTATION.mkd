@@ -29,7 +29,7 @@ tinycdb library reports an error.
 Returns an iterator function.
 
 ## `cdb.make(destination, temporary)`
-Create a cdb maker. Upon calling `maker:finish(),` the temporary file will be
+Create a cdb maker. Upon calling `maker:finish()`, the temporary file will be
 renamed to the destination, replacing it atomically. This function fails if the
 temporary file already exists. If you allow maker to be garbage collected
 without calling finish(), the temporary file will be left behind.

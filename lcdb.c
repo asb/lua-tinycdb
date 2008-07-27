@@ -10,7 +10,7 @@
 #define LCDB_DB "cdb.db"
 #define LCDB_MAKE "cdb.make"
 
-static struct cdb *push_cdb(lua_State *L) {
+static struct cdb *new_cdb(lua_State *L) {
   struct cdb *cdbp = (struct cdb*)lua_newuserdata(L, sizeof(struct cdb));
   luaL_getmetatable(L, LCDB_DB);
   lua_setmetatable(L, -2);
@@ -40,7 +40,7 @@ static int lcdb_open(lua_State *L) {
   if (fd < 0)
     return push_errno(L, errno);
 
-  cdbp = push_cdb(L);
+  cdbp = new_cdb(L);
   ret = cdb_init(cdbp, fd);
   if (ret < 0) {
     lua_pushnil(L);
@@ -144,7 +144,7 @@ static int lcdbm_pairs(lua_State *L) {
   return 1;
 }
 
-static struct cdb_make *push_cdb_make(lua_State *L) {
+static struct cdb_make *new_cdb_make(lua_State *L) {
   struct cdb_make *cdbmp = (struct cdb_make*)lua_newuserdata(L, sizeof(struct cdb_make));
   luaL_getmetatable(L, LCDB_MAKE);
   lua_setmetatable(L, -2);
@@ -172,7 +172,7 @@ static int lcdb_make(lua_State *L) {
   if (fd < 0)
     return push_errno(L, errno);
 
-  cdbmp = push_cdb_make(L);
+  cdbmp = new_cdb_make(L);
   ret = cdb_make_start(cdbmp, fd);
 
   /* store destination and tmpname in userdata environment */

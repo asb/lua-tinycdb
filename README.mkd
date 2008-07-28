@@ -20,8 +20,9 @@ page](http://cr.yp.to/cdb.html):
 * Fast atomic database replacement
 
 ## Project links
+* [Home](http://asbradbury.org/projects/lua-tinycdb/)
 * [Download](http://luaforge.net/projects/lua-tinycdb/)
-* [Documentation](http://luaforge.net/projects/lua-tinycdb/doc/)
+* [Documentation](http://asbradbury.org/projects/lua-tinycdb/doc/)
 * [Source](http://github.com/asb/lua-tinycdb/)
 
 ## Release history

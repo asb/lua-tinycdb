@@ -49,7 +49,7 @@ local var3 = db:get("foo") -- "bar", as get() returns the first value added
 -- foo  bar
 -- foo  baz
 -- baz  qux
-for k, v in db:iter() do
+for k, v in db:pairs() do
   print(k, v)
 end
 

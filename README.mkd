@@ -2,7 +2,7 @@
 
 A binding to the [tinycdb](http://www.corpit.ru/mjt/tinycdb.html)  library by 
 Michael Tokarev, which is a public domain implementation of Daniel J. 
-Bernstein's Constant Database ([cdb](http://cr.yp.to/cdb.html).  A cdb is a 
+Bernstein's Constant Database ([cdb](http://cr.yp.to/cdb.html)).  A cdb is a 
 key-value store (much like BDB/gdbm), but it cannot be updated at runtime 
 (only rebuilt). Reading is very fast, and rebuilding is done atomically by 
 building the new database and then renaming. lua-tinycdb includes the tinycdb 

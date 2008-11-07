@@ -154,8 +154,7 @@ static struct cdb_make *new_cdb_make(lua_State *L) {
 
 static struct cdb_make *check_cdb_make(lua_State *L, int n) {
   struct cdb_make *cdbmp = luaL_checkudata(L, n, LCDB_MAKE);
-  if (cdbmp->cdb_fd < 0)
-    luaL_error(L, "attempted to use a closed cdb_make");
+  luaL_argcheck(L, cdbmp->cdb_fd >= 0, n, "attempted to use a closed cdb_make");
   return cdbmp;
 }
 

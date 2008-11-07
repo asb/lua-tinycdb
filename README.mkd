@@ -26,6 +26,12 @@ page](http://cr.yp.to/cdb.html):
 * [Source](http://github.com/asb/lua-tinycdb/)
 
 ## Release history
+* lua-tinycdb-0.2 (2008-11-07)
+  * documentation
+  * `db:iter()` is now `db:pairs()`, though for this release `iter` is 
+    available as an alias.
+  * bugfix: `__tostring` on a cdb maker returned no results
+  * small internal refactoring
 * lua-tinycdb-0.1 (2008-01-23)
   * first public release
 

@@ -19,8 +19,7 @@ static struct cdb *new_cdb(lua_State *L) {
 
 static struct cdb *check_cdb(lua_State *L, int n) {
   struct cdb *cdbp = (struct cdb*)luaL_checkudata(L, n, LCDB_DB);
-  if (cdbp->cdb_fd < 0)
-    luaL_error(L, "attempted to use a closed cdb");
+  luaL_argcheck(L, cdbp->cdb_fd >= 0, n, "attempted to use a closed cdb");
   return cdbp;
 }
 

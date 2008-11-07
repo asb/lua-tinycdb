@@ -40,4 +40,9 @@ do
     assert_equal("3", t[1])
     assert_equal("III", t[2])
   end
+
+  function test_closed_cdb()
+    db:close()
+    assert_error(nil, function() db:get("one") end)
+  end
 end

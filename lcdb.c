@@ -260,6 +260,7 @@ static const struct luaL_Reg lcdb_m [] = {
   {"find_all", lcdbm_find_all},
   {"get", lcdbm_get},
   {"pairs", lcdbm_pairs},
+  {"iter", lcdbm_pairs},
   {NULL, NULL}
 };
 

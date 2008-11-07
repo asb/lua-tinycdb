@@ -1,4 +1,4 @@
-VERSION= 0.1
+VERSION= 0.2
 
 # change these to reflect your Lua installation
 LUA= /usr
@@ -32,5 +32,5 @@ test: all
 	./lunit test.lua
 
 tar: clean
-	git archive --format=tar --prefix=lua-tinycdb-$(VERSION)/ v$(VERSION) | gzip > lua-tinycdb-$(VERSION).tar.gz
+	git archive --format=tar --prefix=lua-tinycdb-$(VERSION)/ $(VERSION) | gzip > lua-tinycdb-$(VERSION).tar.gz
 

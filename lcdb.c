@@ -5,6 +5,15 @@
 #include <lua.h>
 #include <lauxlib.h>
 
+#ifndef O_BINARY
+  #ifdef _O_BINARY
+    #define O_BINARY _O_BINARY
+  #else
+    #define O_BINARY 0 // system doesn't need O_BINARY 
+  #endif
+#endif
+
+
 #include "cdb.h"
 
 #define LCDB_DB "cdb.db"
@@ -35,7 +44,7 @@ static int lcdb_open(lua_State *L) {
   const char *filename = luaL_checkstring(L, 1);
   int ret;
 
-  int fd = open(filename, O_RDONLY);
+  int fd = open(filename, O_RDONLY | O_BINARY);
   if (fd < 0)
     return push_errno(L, errno);
 
@@ -166,7 +175,7 @@ static int lcdb_make(lua_State *L) {
   const char *dest = luaL_checkstring(L, 1);
   const char *tmpname = luaL_checkstring(L, 2);
 
-  fd = open(tmpname, O_RDWR|O_CREAT|O_EXCL, 0666);
+  fd = open(tmpname, O_RDWR|O_CREAT|O_EXCL|O_BINARY, 0666);
   if (fd < 0)
     return push_errno(L, errno);
 

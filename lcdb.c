@@ -143,7 +143,7 @@ static int lcdbm_iternext(lua_State *L) {
 
 /* for k, v in db:pairs() do ... end */
 static int lcdbm_pairs(lua_State *L) {
-  struct cdb *cdbp = check_cdb(L, 1);
+  struct cdb *__attribute__ ((unused))cdbp = check_cdb(L, 1);
 
   unsigned pos;
   cdb_seqinit(&pos, cdbp);
@@ -157,7 +157,7 @@ static struct cdb_make *new_cdb_make(lua_State *L) {
   luaL_getmetatable(L, LCDB_MAKE);
   lua_setmetatable(L, -2);
   lua_newtable(L);
-  lua_setfenv(L, -2);
+  lua_setuservalue(L, -2);
   return cdbmp;
 }
 
@@ -188,7 +188,7 @@ static int lcdb_make(lua_State *L) {
   ret = cdb_make_start(cdbmp, fd);
 
   /* store destination and tmpname in userdata environment */
-  lua_getfenv(L, -1);
+  lua_getuservalue(L, -1);
   lua_pushstring(L, dest);
   lua_setfield(L, -2, "dest");
   lua_pushstring(L, tmpname);
@@ -243,7 +243,7 @@ static int lcdbmakem_add(lua_State *L) {
 static int lcdbmakem_finish(lua_State *L) {
   struct cdb_make *cdbmp = check_cdb_make(L, 1);
   /* retrieve destination, current filename */
-  lua_getfenv(L, -1);
+  lua_getuservalue(L, -1);
   lua_getfield(L, -1, "dest");
   const char *dest = lua_tostring(L, -1);
   lua_getfield(L, -2, "tmpname");
@@ -290,15 +290,13 @@ int luaopen_cdb(lua_State *L) {
   luaL_newmetatable(L, LCDB_DB);
   lua_pushvalue(L, -1);
   lua_setfield(L, -2, "__index");
-  luaL_register(L, NULL, lcdb_m);
+  luaL_setfuncs(L, lcdb_m, 0);
 
   luaL_newmetatable(L, LCDB_MAKE);
   lua_pushvalue(L, -1);
   lua_setfield(L, -2, "__index");
-  luaL_register(L, NULL, lcdbmake_m);
+  luaL_setfuncs(L, lcdbmake_m, 0);
 
-  lua_newtable(L);
-  luaL_register(L, NULL, lcdb_f);
-
+  luaL_newlib(L, lcdb_f);
   return 1;
 }

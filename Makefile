@@ -8,7 +8,7 @@ LUABIN= $(LUA)/bin
 
 # probably no need to change anything below here
 CC= gcc
-CFLAGS= $(INCS) $(WARN) -O2
+CFLAGS= $(INCS) $(WARN) -O2 -fPIC
 WARN= -Wall
 INCS= -I$(LUAINC)
 

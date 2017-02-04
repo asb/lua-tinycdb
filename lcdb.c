@@ -198,11 +198,12 @@ static int lcdb_make(lua_State *L) {
 static int lcdbmakem_gc(lua_State *L) {
   struct cdb_make *cdbmp = luaL_checkudata(L, 1, LCDB_MAKE);
 
+  cdb_make_finish(cdbmp);
   if (cdbmp->cdb_fd >= 0) {
     close(cdbmp->cdb_fd);
-    cdb_make_free(cdbmp);
     cdbmp->cdb_fd = -1;
   }
+
   return 0;
 }
 
@@ -246,7 +247,6 @@ static int lcdbmakem_finish(lua_State *L) {
 
   if (cdb_make_finish(cdbmp) < 0 || fsync(cdb_fileno(cdbmp)) < 0 || 
       close(cdb_fileno(cdbmp)) < 0 || rename(tmpname, dest) < 0) {
-    cdb_make_free(cdbmp); /* in case cdb_make_finish failed before freeing */
     cdbmp->cdb_fd = -1;
     return luaL_error(L, strerror(errno));
   }

@@ -157,7 +157,7 @@ static struct cdb_make *new_cdb_make(lua_State *L) {
   luaL_getmetatable(L, LCDB_MAKE);
   lua_setmetatable(L, -2);
   lua_newtable(L);
-  lua_setfenv(L, 1);
+  lua_setfenv(L, -2);
   return cdbmp;
 }
 

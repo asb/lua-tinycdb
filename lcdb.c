@@ -167,15 +167,20 @@ static struct cdb_make *check_cdb_make(lua_State *L, int n) {
   return cdbmp;
 }
 
-/* cdb.make(destination, temporary) */
+/* cdb.make(destination, temporary, [overwrite]) */
 static int lcdb_make(lua_State *L) {
   int fd;
   int ret;
   struct cdb_make *cdbmp;
   const char *dest = luaL_checkstring(L, 1);
   const char *tmpname = luaL_checkstring(L, 2);
+  int overwrite = lua_toboolean(L, 3);
+  int flags = O_RDWR|O_CREAT|O_EXCL|O_BINARY;
 
-  fd = open(tmpname, O_RDWR|O_CREAT|O_EXCL|O_BINARY, 0666);
+  if (overwrite)
+      flags &= ~O_EXCL;
+
+  fd = open(tmpname, flags, 0666);
   if (fd < 0)
     return push_errno(L, errno);
 

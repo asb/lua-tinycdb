@@ -203,8 +203,8 @@ static int lcdb_make(lua_State *L) {
 static int lcdbmakem_gc(lua_State *L) {
   struct cdb_make *cdbmp = luaL_checkudata(L, 1, LCDB_MAKE);
 
-  cdb_make_finish(cdbmp);
   if (cdbmp->cdb_fd >= 0) {
+    cdb_make_finish(cdbmp);
     close(cdbmp->cdb_fd);
     cdbmp->cdb_fd = -1;
   }

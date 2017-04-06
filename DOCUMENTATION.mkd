@@ -28,16 +28,19 @@ tinycdb library reports an error.
 
 Returns an iterator function.
 
-## `cdb.make(destination, temporary)`
+## `cdb.make(destination, temporary, [overwrite])`
 Create a cdb maker. Upon calling `maker:finish()`, the temporary file will be
 renamed to the destination, replacing it atomically. This function fails if the
-temporary file already exists. If you allow maker to be garbage collected
+temporary file already exists unless overwrite is set to true in wich case the
+temporary file is overwriten. If you allow maker to be garbage collected
 without calling finish(), the temporary file will be left behind.
 
 Takes the parameters:
 
 * `destination` the destination filename.
 * `temporary` the name of the file to be used while the cdb is being constructed
+* `overwrite` optional, boolean indicating if the temporary file should be overwritten
+   if it exists.
 
 Returns an instance of `cdb.make` or `nil` plus an error message.
 
